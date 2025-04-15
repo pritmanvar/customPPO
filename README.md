@@ -1,4 +1,4 @@
-# Custom PPO: Proximal Policy Optimization from Scratch
+# Custom PPO: Proximal Policy Optimization from Scratch 
 
 This repository offers a custom implementation of the Proximal Policy Optimization (PPO) algorithm in Python, emphasizing clarity and educational value. It includes both a foundational version and an optimized variant, facilitating a deeper understanding of PPO's mechanics and potential enhancements.
 
