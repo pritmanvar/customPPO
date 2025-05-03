@@ -1,13 +1,13 @@
 import gymnasium as gym
-from ppo_with_optimizations import PPO
+from ppo import PPO
 import numpy as np
 
-env = gym.make('Pendulum-v1')
+env = gym.make('Ant-v4', render_mode='rgb_array')
 print(env.action_space.sample())
 model = PPO(env)
-model.learn(10000)
+model.learn(100)
+breakpoint()
 
-print(model.rewards)
 
 import matplotlib.pyplot as plt
 

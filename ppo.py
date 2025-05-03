@@ -25,7 +25,6 @@ class PPO:
         self.actor_optim = Adam(self.actor.parameters(), lr=self.lr, weight_decay=1e-4)
         self.critic_optim = Adam(self.critic.parameters(), lr = self.lr, weight_decay=1e-4)
         
-        self.rewards = []
     def learn(self, total_timesteps):
         t_so_far = 0
         
@@ -124,7 +123,6 @@ class PPO:
             # Colect episodic length and rewards
             batch_lens.append(ep_t + 1) # plus 1 because timestep starts at 0
             batch_rews.append(ep_rews)
-        self.rewards += torch.tensor(batch_rews, dtype=torch.float).flatten().tolist()
         
         # Reshape data as tensor in the shape specified before returning.
         batch_obs = torch.tensor(batch_obs, dtype=torch.float)
@@ -172,9 +170,9 @@ class PPO:
         return batch_rtgs
 
     def _init_hyperparameters(self):
-        self.timesteps_per_batch = 4800
-        self.max_timesteps_per_episode = 1600
-        self.gamma = 0.95                        # Discount factor
-        self.n_updates_per_iteration = 5         # Number of opochs per iteration
-        self.clip = 0.2                          # clip thresold
-        self.lr = 0.005
+        self.timesteps_per_batch = 2048      # rollout buffer size per update
+        self.max_timesteps_per_episode = 1000      # MuJoCo default time limit
+        self.gamma = 0.99      # discount factor
+        self.n_updates_per_iteration = 10        # epochs per update
+        self.clip = 0.2       # PPO clipping ε
+        self.lr = 3e-4      # learning rate

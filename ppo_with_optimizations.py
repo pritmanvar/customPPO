@@ -133,8 +133,9 @@ class PPO:
         # Number of timesteps run so far this batch
         t = 0
         
+        print("STARTING EXECUTION", t, self.timesteps_per_batch)
         while t < self.timesteps_per_batch:
-            print(t, end=" ")
+            print(t, "TIMESTEPS")
             # Rewards this epishode
             ep_rews = []
             ep_vals = []
@@ -200,6 +201,7 @@ class PPO:
         # of the graph and just convert the action to numpy array.
         # log prob as tensor is fine. Our computation graph will
         # start later down the line.
+        
         return action.detach().numpy(), log_prob.detach()
     
     def compute_rtgs(self, batch_rews):
