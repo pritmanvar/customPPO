@@ -57,7 +57,7 @@ class CustomEnvWrapper(gym.Wrapper):
             costs += contact_cost
             info["reward_ctrl"] = -contact_cost
 
-        reward = [rewards - cost for cost in reward_cost]
+        reward = [rewards/8 - cost for cost in reward_cost]
 
         if self.render_mode == "human":
             self.render()
