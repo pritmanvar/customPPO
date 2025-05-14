@@ -391,12 +391,13 @@ class RolloutBuffer(BaseBuffer):
     def reset(self) -> None:
         self.observations = np.zeros((self.buffer_size, self.n_envs, *self.obs_shape), dtype=np.float32)
         self.actions = np.zeros((self.buffer_size, self.n_envs, self.action_dim), dtype=np.float32)
-        self.rewards = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
+        # INSTRUCTION: Modify shape of rewards, values and log_probs
+        self.rewards = np.zeros((self.buffer_size, self.n_envs, self.action_dim), dtype=np.float32)
         self.returns = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
         self.episode_starts = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.values = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.log_probs = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.advantages = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
+        self.values = np.zeros((self.buffer_size, self.n_envs, self.action_dim), dtype=np.float32)
+        self.log_probs = np.zeros((self.buffer_size, self.n_envs, self.action_dim), dtype=np.float32)
+        self.advantages = np.zeros((self.buffer_size, self.n_envs, self.action_dim), dtype=np.float32)
         self.generator_ready = False
         super().reset()
 
@@ -510,13 +511,14 @@ class RolloutBuffer(BaseBuffer):
         batch_inds: np.ndarray,
         env: Optional[VecNormalize] = None,
     ) -> RolloutBufferSamples:
+        # INSTRUCTION: Keep original shape of values, log_probs, advantages and return without flatten.
         data = (
             self.observations[batch_inds],
             self.actions[batch_inds],
-            self.values[batch_inds].flatten(),
-            self.log_probs[batch_inds].flatten(),
-            self.advantages[batch_inds].flatten(),
-            self.returns[batch_inds].flatten(),
+            self.values[batch_inds],
+            self.log_probs[batch_inds],
+            self.advantages[batch_inds],
+            self.returns[batch_inds],
         )
         return RolloutBufferSamples(*tuple(map(self.to_torch, data)))
 

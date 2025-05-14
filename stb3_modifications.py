@@ -1,8 +1,7 @@
 import numpy as np
 import gymnasium as gym
-import matplotlib.pyplot as plt
-import torch
 from my_stable_baselines3 import PPO
+# from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 
 import pandas as pd
@@ -45,6 +44,7 @@ class CustomEnvWrapper(gym.Wrapper):
         info = {
             "reward_forward": forward_reward,
             "reward_ctrl": -ctrl_cost,
+            "combined_reward": combined_reward,
             "reward_survive": healthy_reward,
             "x_position": xy_position_after[0],
             "y_position": xy_position_after[1],
@@ -62,12 +62,12 @@ class CustomEnvWrapper(gym.Wrapper):
 
         if self.render_mode == "human":
             self.render()
-        return observation, reward, combined_reward, terminated, False, info
+        return observation, reward, terminated, False, info
 
 
 env = CustomEnvWrapper(gym.make("Ant-v4"))
-model = PPO("MlpPolicy", env, verbose=1)
+# env = gym.make("Ant-v4")
+model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard_logs/")
 
-mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=1)
-
+model.learn(total_timesteps=1000000)
 print(model.predict(env.reset()[0]))

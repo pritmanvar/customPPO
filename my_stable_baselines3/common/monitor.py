@@ -9,6 +9,7 @@ from typing import Any, Optional, SupportsFloat, Union
 
 import gymnasium as gym
 import pandas
+import numpy as np
 from gymnasium.core import ActType, ObsType
 
 
@@ -92,12 +93,14 @@ class Monitor(gym.Wrapper[ObsType, ActType, ObsType, ActType]):
         if self.needs_reset:
             raise RuntimeError("Tried to step environment that needs reset")
         observation, reward, terminated, truncated, info = self.env.step(action)
-        self.rewards.append(float(reward))
+        
+        # INSTRUCTION: Modify reward append for multi reward.
+        self.rewards.append(reward)
         if terminated or truncated:
             self.needs_reset = True
-            ep_rew = sum(self.rewards)
+            ep_rew = np.sum(np.array(self.rewards), axis=0)
             ep_len = len(self.rewards)
-            ep_info = {"r": round(ep_rew, 6), "l": ep_len, "t": round(time.time() - self.t_start, 6)}
+            ep_info = {"r": np.round(ep_rew, 6), "l": ep_len, "t": round(time.time() - self.t_start, 6)}
             for key in self.info_keywords:
                 ep_info[key] = info[key]
             self.episode_returns.append(ep_rew)

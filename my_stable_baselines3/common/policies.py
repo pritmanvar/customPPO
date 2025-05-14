@@ -593,8 +593,6 @@ class ActorCriticPolicy(BasePolicy):
 
         latent_dim_pi = self.mlp_extractor.latent_dim_pi
         
-        print("HII I am in the build")
-
         if isinstance(self.action_dist, DiagGaussianDistribution):
             self.action_net, self.log_std = self.action_dist.proba_distribution_net(
                 latent_dim=latent_dim_pi, log_std_init=self.log_std_init
@@ -608,11 +606,11 @@ class ActorCriticPolicy(BasePolicy):
         else:
             raise NotImplementedError(f"Unsupported distribution '{self.action_dist}'.")
 
-        self.value_net = nn.Linear(self.mlp_extractor.latent_dim_vf, 1)
+        # INSTRUCTION: Modify output neuron of value network
+        self.value_net = nn.Linear(self.mlp_extractor.latent_dim_vf, get_action_dim(self.action_space))
         # Init weights: use orthogonal initialization
         # with small initial weight for the output
         
-        print(self.action_net)
         if self.ortho_init:
             # TODO: check for features_extractor
             # Values from stable-baselines.
@@ -659,9 +657,16 @@ class ActorCriticPolicy(BasePolicy):
         # Evaluate the values for the given observations
         values = self.value_net(latent_vf)
         distribution = self._get_action_dist_from_latent(latent_pi)
-        actions = distribution.get_actions(deterministic=deterministic)
-        log_prob = distribution.log_prob(actions)
+        
+        # INSTRUCTION: get actions
+        actions = th.tensor([])
+        log_prob = th.tensor([])
+        for dist in distribution:
+            action = dist.get_actions(deterministic=deterministic)
+            actions = th.cat((actions, action))
+            log_prob = th.cat((log_prob, dist.log_prob(action)))
         actions = actions.reshape((-1, *self.action_space.shape))  # type: ignore[misc]
+        log_prob = log_prob.reshape((-1, *self.action_space.shape))  # type: ignore[misc]
         return actions, values, log_prob
 
     def extract_features(  # type: ignore[override]
@@ -699,12 +704,8 @@ class ActorCriticPolicy(BasePolicy):
         
         mean_actions = []
         
-        print(len(self.action_net))
         for action_network in self.action_net:
             mean_actions.append(action_network(latent_pi))
-        
-        print(mean_actions)
-        print(self.log_std)
         
         # INSTRUCTION: Get list of probability distributions for each network.
         if isinstance(self.action_dist, DiagGaussianDistribution):
@@ -741,8 +742,6 @@ class ActorCriticPolicy(BasePolicy):
         for ack in actions_list:
             actions = th.cat((actions, ack.get_actions(deterministic=deterministic)))
         actions = actions.squeeze()
-        print("MY ACTIONS")
-        print(actions)
         
         return actions
 
@@ -765,9 +764,15 @@ class ActorCriticPolicy(BasePolicy):
             latent_pi = self.mlp_extractor.forward_actor(pi_features)
             latent_vf = self.mlp_extractor.forward_critic(vf_features)
         distribution = self._get_action_dist_from_latent(latent_pi)
-        log_prob = distribution.log_prob(actions)
+        
+        # INSTRUCTION: get log_prob and entropy
+        log_prob = th.zeros_like(actions)
+        entropy = th.zeros_like(actions)
+        for indx, dist in enumerate(distribution):
+            log_prob.T[indx] = dist.log_prob(actions[:,indx])
+            entropy.T[indx] = dist.entropy()
+        
         values = self.value_net(latent_vf)
-        entropy = distribution.entropy()
         return values, log_prob, entropy
 
     def get_distribution(self, obs: PyTorchObs) -> Distribution:

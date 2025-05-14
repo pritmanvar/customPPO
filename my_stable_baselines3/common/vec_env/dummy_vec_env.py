@@ -10,6 +10,7 @@ import numpy as np
 from my_stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvIndices, VecEnvObs, VecEnvStepReturn
 from my_stable_baselines3.common.vec_env.patch_gym import _patch_env
 from my_stable_baselines3.common.vec_env.util import dict_to_obs, obs_space_info
+from my_stable_baselines3.common.preprocessing import get_action_dim
 
 
 class DummyVecEnv(VecEnv):
@@ -46,7 +47,9 @@ class DummyVecEnv(VecEnv):
 
         self.buf_obs = OrderedDict([(k, np.zeros((self.num_envs, *tuple(shapes[k])), dtype=dtypes[k])) for k in self.keys])
         self.buf_dones = np.zeros((self.num_envs,), dtype=bool)
-        self.buf_rews = np.zeros((self.num_envs,), dtype=np.float32)
+        
+        # INSTRUCTION: Change shape of buffer rewards array.
+        self.buf_rews = np.zeros((self.num_envs, get_action_dim(env.action_space)), dtype=np.float32)
         self.buf_infos: list[dict[str, Any]] = [{} for _ in range(self.num_envs)]
         self.metadata = env.metadata
 
